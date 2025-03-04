@@ -339,30 +339,6 @@ require('lazy').setup({
   -- Then, because we use the `config` key, the configuration only runs
   -- after the plugin has been loaded:
   --  config = function() ... end
-
-  { -- Useful plugin to show you pending keybinds.
-    'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
-    config = function() -- This is the function that runs, AFTER loading
-      require('which-key').setup()
-
-      -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
-        ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
-      }
-      -- visual mode
-      require('which-key').register({
-        ['<leader>h'] = { 'Git [H]unk' },
-      }, { mode = 'v' })
-    end,
-  },
-
   -- NOTE: Plugins can specify dependencies.
   --
   -- The dependencies are proper plugin specifications as well - anything
@@ -682,13 +658,25 @@ require('lazy').setup({
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
-      vim.list_extend(ensure_installed, {
-        'stylua',
-        'gopls', -- Used to format Lua code
-      })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+
+      -- For LSP servers only (what mason-lspconfig should install)
+      local ensure_installed_lsp = vim.tbl_keys(servers or {})
+
+      -- For standalone tools (what mason-tool-installer should install)
+      local ensure_installed_tools = {
+        'stylua', -- Lua formatter
+        'gofumpt', -- Stricter Go formatter
+        'golangci-lint', -- Comprehensive Go linter
+        'delve', -- Go debugger
+      }
+
+      vim.list_extend(ensure_installed, {})
+
+      require('mason-tool-installer').setup { ensure_installed = ensure_installed_tools }
 
       require('mason-lspconfig').setup {
+        ensure_installed = ensure_installed_lsp,
+        automatic_installation = true,
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
@@ -869,7 +857,55 @@ require('lazy').setup({
     end,
   },
 
-  -- Highlight todo, notes, etc in comments
+  {
+    'mfussenegger/nvim-dap',
+    dependencies = {
+      'leoluz/nvim-dap-go', -- Go-specific debug adapter
+      'rcarriga/nvim-dap-ui',
+    },
+    config = function()
+      require('dap-go').setup()
+      -- Add keybindings for debugging
+      vim.keymap.set('n', '<leader>db', function()
+        require('dap').toggle_breakpoint()
+      end)
+      vim.keymap.set('n', '<leader>dc', function()
+        require('dap').continue()
+      end)
+    end,
+  },
+
+  {
+    'ray-x/go.nvim',
+    dependencies = {
+      'ray-x/guihua.lua',
+    },
+    config = function()
+      require('go').setup()
+    end,
+    event = { 'CmdlineEnter' },
+    ft = { 'go', 'gomod' },
+    build = ':lua require("go.install").update_all_sync()',
+  },
+
+  {
+    'jose-elias-alvarez/null-ls.nvim',
+    config = function()
+      local null_ls = require 'null-ls'
+      null_ls.setup {
+        sources = {
+          null_ls.builtins.formatting.gofumpt,
+          null_ls.builtins.formatting.goimports,
+          null_ls.builtins.diagnostics.golangci_lint.with {
+            condition = function(utils)
+              return utils.root_has_file 'go.mod'
+            end,
+          },
+        },
+      }
+    end,
+  },
+
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
   { -- Collection of various small independent plugins/modules
