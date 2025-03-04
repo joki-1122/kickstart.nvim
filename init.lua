@@ -258,6 +258,42 @@ require('lazy').setup({
     },
   },
 
+  { -- File explorer tree
+    'nvim-tree/nvim-tree.lua',
+    version = '*',
+    lazy = false,
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+    },
+    config = function()
+      vim.g.loaded_netrw = 1
+      vim.g.loaded_netrwPlugin = 1
+      vim.opt.termguicolors = true
+      require('nvim-tree').setup {
+        sort_by = 'case_sensitive',
+        view = {
+          width = 30,
+        },
+        renderer = {
+          group_empty = true,
+        },
+        filters = {
+          dotfiles = false,
+        },
+        git = {
+          enable = true,
+          ignore = false,
+        },
+      }
+      vim.keymap.set('n', '<C-n>', function()
+        require('nvim-tree.api').tree.toggle()
+      end, { silent = true })
+      vim.keymap.set('n', '<leader>e', function()
+        require('nvim-tree.api').tree.focus()
+      end, { silent = true })
+    end,
+  },
+
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
