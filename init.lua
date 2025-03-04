@@ -87,11 +87,15 @@ P.S. You can delete this when you're done too. It's your config now! :)
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+--
+-- font
+
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
+vim.opt.guifont = 'JetBrainsMono Nerd Font:h18'
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -291,6 +295,33 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>e', function()
         require('nvim-tree.api').tree.focus()
       end, { silent = true })
+    end,
+  },
+
+  { -- Tokyo Night color scheme
+    'folke/tokyonight.nvim',
+    priority = 1000,
+    config = function()
+      require('tokyonight').setup {
+        style = 'storm', -- Most popular variant
+        light_style = 'day',
+        transparent = false,
+        terminal_colors = true,
+        styles = {
+          comments = { italic = true },
+          keywords = { italic = true },
+          functions = {},
+          variables = {},
+        },
+        on_colors = function(colors)
+          -- Optional function to override specific colors
+        end,
+        on_highlights = function(highlights, colors)
+          -- Optional function to override specific highlights
+        end,
+      }
+
+      vim.cmd 'colorscheme tokyonight'
     end,
   },
 
@@ -602,7 +633,17 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        -- gopls = {},
+        gopls = {
+          settings = {
+            gopls = {
+              analyses = {
+                unusedparams = true,
+              },
+              staticcheck = true,
+              gofumpt = true,
+            },
+          },
+        },
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -642,7 +683,8 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
+        'stylua',
+        'gopls', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
