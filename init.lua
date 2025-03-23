@@ -728,6 +728,102 @@ require('lazy').setup({
     },
   },
 
+  {
+    'mfussenegger/nvim-dap',
+    dependencies = {
+      'jay-babu/mason-nvim-dap.nvim',
+      'nvim-neotest/nvim-nio',
+      'theHamsta/nvim-dap-virtual-text',
+    },
+    config = function()
+      require('dapui').setup()
+      require('mason-nvim-dap').setup {
+        ensure_installed = { 'delve' },
+        automatic_installation = true,
+      }
+      require('nvim-dap-virtual-text').setup {
+        enabled = true,
+        enable_commands = true,
+        highlight_changed_variables = true,
+        highlight_new_variables = true,
+        highlight_new_as_changed = true,
+        all_frames = true,
+        commented = false,
+        show_stop_reason = true,
+        only_first_definition = true,
+        all_references = true,
+        clear_on_continue = true,
+        text_lines = true,
+        text_prefix = '-> ',
+        separator = ' | ',
+        error_prefix = 'E: ',
+        info_prefix = 'I: ',
+        virt_text_pos = 'eol',
+        virt_lines = true,
+        virt_lines_above = true,
+        filter_references_pattern = '<module>',
+        display_callback = require('nvim-dap-virtual-text').default_display_callback,
+      }
+      require('dap').configurations.go = {
+        {
+          name = 'Launch Package',
+          type = 'go',
+          request = 'launch',
+          mode = 'debug',
+          program = '${fileDirname}',
+        },
+        {
+          name = 'Launch File',
+          type = 'go',
+          request = 'launch',
+          mode = 'debug',
+          program = '${file}',
+        },
+        {
+          name = 'Attach to running process',
+          type = 'go',
+          request = 'attach',
+          mode = 'debug',
+          processId = require('dap.utils').pick_process,
+        },
+      }
+      vim.keymap.set('n', '<F5>', function()
+        require('dap').continue()
+      end)
+      vim.keymap.set('n', '<F9>', function()
+        require('dap').toggle_breakpoint()
+      end)
+      vim.keymap.set('n', '<F10>', function()
+        require('dap').step_over()
+      end)
+      vim.keymap.set('n', '<F11>', function()
+        require('dap').step_into()
+      end)
+      vim.keymap.set('n', '<F12>', function()
+        require('dap').step_out()
+      end)
+      vim.keymap.set('n', '<leader>dt', function()
+        require('dapui').toggle()
+      end)
+      vim.keymap.set('n', '<leader>db', function()
+        require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
+      end)
+      vim.keymap.set('n', '<leader>dr', function()
+        require('dap').repl.open()
+      end)
+    end,
+  },
+  {
+    'rcarriga/nvim-dap-ui',
+    config = function()
+      require('dapui').setup()
+    end,
+  },
+  {},
+  {
+    'jay-babu/mason-nvim-dap.nvim',
+  },
+
   { -- Autocompletion
     'hrsh7th/nvim-cmp',
     event = 'InsertEnter',
