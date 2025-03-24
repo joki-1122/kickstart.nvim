@@ -734,13 +734,21 @@ require('lazy').setup({
       'jay-babu/mason-nvim-dap.nvim',
       'nvim-neotest/nvim-nio',
       'theHamsta/nvim-dap-virtual-text',
+      'leoluz/nvim-dap-go', -- Go-specific debug adapter
+      'rcarriga/nvim-dap-ui',
     },
     config = function()
-      require('dapui').setup()
+      -- Setup dap-ui
+      local dapui = require 'dapui'
+      dapui.setup()
+
+      -- Setup mason-nvim-dap for Go
       require('mason-nvim-dap').setup {
         ensure_installed = { 'delve' },
         automatic_installation = true,
       }
+
+      -- Setup nvim-dap-virtual-text
       require('nvim-dap-virtual-text').setup {
         enabled = true,
         enable_commands = true,
@@ -764,6 +772,8 @@ require('lazy').setup({
         filter_references_pattern = '<module>',
         display_callback = require('nvim-dap-virtual-text').default_display_callback,
       }
+
+      -- Go Debug Configurations
       require('dap').configurations.go = {
         {
           name = 'Launch Package',
@@ -787,6 +797,8 @@ require('lazy').setup({
           processId = require('dap.utils').pick_process,
         },
       }
+
+      -- Keybindings for DAP
       vim.keymap.set('n', '<F5>', function()
         require('dap').continue()
       end)
@@ -804,7 +816,7 @@ require('lazy').setup({
       end)
       vim.keymap.set('n', '<leader>dt', function()
         require('dapui').toggle()
-      end)
+      end) -- Toggle DAP UI
       vim.keymap.set('n', '<leader>db', function()
         require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
       end)
@@ -813,17 +825,6 @@ require('lazy').setup({
       end)
     end,
   },
-  {
-    'rcarriga/nvim-dap-ui',
-    config = function()
-      require('dapui').setup()
-    end,
-  },
-  {},
-  {
-    'jay-babu/mason-nvim-dap.nvim',
-  },
-
   { -- Autocompletion
     'hrsh7th/nvim-cmp',
     event = 'InsertEnter',
@@ -950,24 +951,6 @@ require('lazy').setup({
 
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
-    end,
-  },
-
-  {
-    'mfussenegger/nvim-dap',
-    dependencies = {
-      'leoluz/nvim-dap-go', -- Go-specific debug adapter
-      'rcarriga/nvim-dap-ui',
-    },
-    config = function()
-      require('dap-go').setup()
-      -- Add keybindings for debugging
-      vim.keymap.set('n', '<leader>db', function()
-        require('dap').toggle_breakpoint()
-      end)
-      vim.keymap.set('n', '<leader>dc', function()
-        require('dap').continue()
-      end)
     end,
   },
 
